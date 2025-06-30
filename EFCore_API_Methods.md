@@ -92,7 +92,7 @@ EF Core also builds relationships using `virtual` navigation properties.
 
 ---
 
-### **Step 4: Register DbContext in `Startup.cs` or `Program.cs`**
+### **Step 4: Register DbContext in `Program.cs`**
 
 ```csharp
 services.AddDbContext<AddressDemoDbContext>(options =>
