@@ -4,48 +4,48 @@
 
 ### `StateController.cs`
 ```csharp
-using Address_API.Helpers;
-using Address_API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-
-namespace Address_API.Controllers
+// Inside Address_API.Controllers namespace
+[Route("api/[controller]")]
+[ApiController]
+public class StateController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class StateController : ControllerBase
+    private readonly AddressDemoDbContext _context;
+
+    public StateController(AddressDemoDbContext context)
     {
-        private readonly AddressDemoDbContext _context;
+        _context = context;
+    }
 
-        public StateController(AddressDemoDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET: api/State
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<State>>> GetAll()
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<State>>> GetAll()
+    {
+        try
         {
             var states = await _context.States
-            .Select(s => new
-             {
-                 s.StateId,
-                 s.CountryId,
-                 s.StateName,
-                 s.StateCode,
-                 s.CreatedDate,
-                 s.ModifiedDate,
-                 s.FilePath,
-                 CountryName = s.Country.CountryName
-             })
-            .ToListAsync();
+                .Select(s => new
+                {
+                    s.StateId,
+                    s.CountryId,
+                    s.StateName,
+                    s.StateCode,
+                    s.CreatedDate,
+                    s.ModifiedDate,
+                    s.FilePath,
+                    CountryName = s.Country.CountryName
+                }).ToListAsync();
 
             return Ok(states);
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-        // GET: api/State/Top10
-        [HttpGet("Top10")]
-        public async Task<ActionResult<IEnumerable<State>>> GetTop10()
+    [HttpGet("Top10")]
+    public async Task<ActionResult<IEnumerable<State>>> GetTop10()
+    {
+        try
         {
             var topStates = await _context.States
                 .Include(s => s.Country)
@@ -54,19 +54,30 @@ namespace Address_API.Controllers
 
             return Ok(topStates);
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-        // GET: api/State/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<State>> GetById(int id)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<State>> GetById(int id)
+    {
+        try
         {
             var state = await _context.States.FindAsync(id);
-
             return state == null ? NotFound() : Ok(state);
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-        // GET: api/State/byCountry/3
-        [HttpGet("byCountry/{countryId}")]
-        public async Task<ActionResult<IEnumerable<object>>> GetByCountry(int countryId)
+    [HttpGet("byCountry/{countryId}")]
+    public async Task<ActionResult<IEnumerable<object>>> GetByCountry(int countryId)
+    {
+        try
         {
             var states = await _context.States
                 .Where(s => s.CountryId == countryId)
@@ -75,10 +86,16 @@ namespace Address_API.Controllers
 
             return Ok(states);
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-        // GET: api/State/dropdown
-        [HttpGet("dropdown")]
-        public async Task<ActionResult<IEnumerable<object>>> GetDropdown()
+    [HttpGet("dropdown")]
+    public async Task<ActionResult<IEnumerable<object>>> GetDropdown()
+    {
+        try
         {
             var countries = await _context.Countries
                 .Select(c => new { c.CountryId, c.CountryName })
@@ -86,10 +103,16 @@ namespace Address_API.Controllers
 
             return Ok(countries);
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-        // POST: api/State
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] State state)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] State state)
+    {
+        try
         {
             state.CreatedDate = DateTime.Now;
             _context.States.Add(state);
@@ -97,10 +120,16 @@ namespace Address_API.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = state.StateId }, state);
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-        // PUT: api/State/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] State state)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] State state)
+    {
+        try
         {
             if (id != state.StateId)
                 return BadRequest();
@@ -111,10 +140,16 @@ namespace Address_API.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-        // DELETE: api/State/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
         {
             var state = await _context.States.FindAsync(id);
             if (state == null)
@@ -123,6 +158,10 @@ namespace Address_API.Controllers
             _context.States.Remove(state);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
         }
     }
 }
@@ -176,40 +215,46 @@ namespace Address_Consume.Models
 
 ### `StateController.cs`
 ```csharp
-using Address_Consume.Models;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Text;
-
-namespace Address_Consume.Controllers
+public class StateController : Controller
 {
-    public class StateController : Controller
+    private readonly HttpClient _client;
+
+    public StateController(IHttpClientFactory httpClientFactory)
     {
-        private readonly HttpClient _client;
+        _client = httpClientFactory.CreateClient();
+        _client.BaseAddress = new Uri("https://localhost:7093/api/");
+    }
 
-        public StateController(IHttpClientFactory httpClientFactory)
-        {
-            _client = httpClientFactory.CreateClient();
-            _client.BaseAddress = new Uri("https://localhost:7093/api/");
-        }
-
-        public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index()
+    {
+        try
         {
             var response = await _client.GetAsync("State");
             var json = await response.Content.ReadAsStringAsync();
             var list = JsonConvert.DeserializeObject<List<StateModel>>(json);
             return View(list);
         }
+        catch
+        {
+            return View(new List<StateModel>());
+        }
+    }
 
-        public async Task<IActionResult> Delete(int id) 
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
         {
             await _client.DeleteAsync($"State/{id}");
-            return RedirectToAction("Index");
         }
+        catch { }
+        return RedirectToAction("Index");
+    }
 
-        public async Task<IActionResult> AddEdit(int? id)
+    public async Task<IActionResult> AddEdit(int? id)
+    {
+        try
         {
-            var countryResponse = await _client.GetAsync("State/dropdown"); 
+            var countryResponse = await _client.GetAsync("State/dropdown");
             var countryJson = await countryResponse.Content.ReadAsStringAsync();
             var countries = JsonConvert.DeserializeObject<List<CountryDropDownModel>>(countryJson);
 
@@ -231,9 +276,16 @@ namespace Address_Consume.Controllers
             state.CountryList = countries;
             return View(state);
         }
+        catch
+        {
+            return RedirectToAction("Index");
+        }
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> AddEdit(StateModel state)
+    [HttpPost]
+    public async Task<IActionResult> AddEdit(StateModel state)
+    {
+        try
         {
             if (!ModelState.IsValid)
             {
@@ -257,6 +309,10 @@ namespace Address_Consume.Controllers
                 await _client.PutAsync($"State/{state.StateId}", content);
             }
 
+            return RedirectToAction("Index");
+        }
+        catch
+        {
             return RedirectToAction("Index");
         }
     }
