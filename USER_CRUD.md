@@ -168,13 +168,11 @@ namespace Address_Consume.Controllers
     public class UserController : Controller
     {
         private readonly HttpClient _client;
-        private readonly ILogger<UserController> _logger;
 
-        public UserController(IHttpClientFactory httpClientFactory, ILogger<UserController> logger)
+        public UserController(IHttpClientFactory httpClientFactory)
         {
             _client = httpClientFactory.CreateClient();
             _client.BaseAddress = new Uri("https://localhost:7093/api/");
-            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -190,7 +188,6 @@ namespace Address_Consume.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching users.");
                 TempData["Error"] = "Unable to load users.";
                 return View(new List<UserModel>());
             }
@@ -205,7 +202,6 @@ namespace Address_Consume.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while deleting user with ID {id}.");
                 TempData["Error"] = "Unable to delete user.";
             }
 
@@ -235,7 +231,6 @@ namespace Address_Consume.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while loading form for User ID {id}.");
                 TempData["Error"] = "Unable to load form.";
                 return RedirectToAction("Index");
             }
@@ -266,7 +261,6 @@ namespace Address_Consume.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while saving user with ID {user.UserId}.");
                 TempData["Error"] = "Unable to save user.";
                 return View(user);
             }
