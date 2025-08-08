@@ -11,31 +11,44 @@ This example demonstrates how to **authenticate users** and **store their JWT to
 ```csharp
 // ✅ AuthService is responsible for making API calls for authentication
 //    It sends Username, Password, and Role to the API and returns the JSON response.
-public async Task<string?> AuthenticateUserAsync(string username, string password, string? role = null)
+using Newtonsoft.Json;
+using System.Text;
+
+namespace Address_Consume.Service
 {
-    // ✅ Prepare request body
-    var requestData = new 
-    { 
-        UserName = username, 
-        Password = password, 
-        Role = role // ✅ Sending role if required
-    };
-
-    // ✅ Convert request data to JSON
-    var content = new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json");
-
-    // ✅ Call API endpoint
-    HttpResponseMessage response = await _httpClient.PostAsync("https://localhost:7093/api/User/login", content);
-
-    // ✅ If success, return JSON response
-    if (response.IsSuccessStatusCode)
+    public class AuthService
     {
-        return await response.Content.ReadAsStringAsync();
-    }
+        private readonly HttpClient _httpClient;
 
-    // ❌ Return null if login fails
-    return null;
+        public AuthService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        public async Task<string?> AuthenticateUserAsync(string username, string password, string? role = null)
+        {
+            var requestData = new
+            {
+                UserName = username,
+                Password = password,
+                Role = role // ✅ Sending role if required
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await _httpClient.PostAsync("https://localhost:7093/api/User/login", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+
+            return null;
+        }
+
+    }
 }
+
 ````
 
 ---
