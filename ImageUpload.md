@@ -210,7 +210,134 @@ public async Task<IActionResult> AddEdit(StateViewModel state)
     return RedirectToAction("Index");
 }
 ```
+## Step 6: StateList view page
+```html
+@model List<StateViewModel>
+@{
+    ViewData["Title"] = "State List";
+}
 
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">State List</h2>
+        <a class="btn btn-success" href="/State/AddEdit">Add New State</a>
+    </div>
+
+    <table class="table table-bordered table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Image</th>
+                <th>State ID</th>
+                <th>State Name</th>
+                <th>State Code</th>
+                <th>Country ID</th>
+                <th>Country Name</th>
+                <th>Created Date</th>
+                <th style="width: 150px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.StateId</td>
+                       
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.FilePath))
+                            {
+                                <img src="https://localhost:7093/@item.FilePath" alt="State Image" width="80" class="img-thumbnail" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">No Image</span>
+                            }
+                        </td>
+
+                        <td>@item.StateName</td>
+                        <td>@item.StateCode</td>
+                        <td>@item.CountryId</td>
+                        <td>@item.CountryName</td>
+                        <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
+                        <td>@item.ModifiedDate?.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            <a href="/State/AddEdit/@item.StateId" class="btn btn-sm btn-primary">Edit</a>
+                            <a href="/State/Delete/@item.StateId" class="btn btn-sm btn-danger"
+                               onclick="return confirm('Are you sure you want to delete this state?');">Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted">No states found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+```
+
+## Step 7: Add Edit State Form
+```html
+@model StateViewModel
+
+@{
+    ViewData["Title"] = Model.StateId == 0 ? "Add State" : "Edit State";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+    <form asp-action="AddEdit" asp-controller="State" method="post" enctype="multipart/form-data">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <input type="hidden" asp-for="StateId" />
+        <input type="hidden" asp-for="CreatedDate" />
+
+        <div class="mb-3">
+            <label asp-for="CountryId" class="form-label"></label>
+            <select asp-for="CountryId" class="form-select" asp-items="@(new SelectList(Model.CountryList, "CountryId", "CountryName"))">
+                <option value="">-- Select Country --</option>
+            </select>
+            <span asp-validation-for="CountryId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StateName" class="form-label"></label>
+            <input asp-for="StateName" class="form-control" />
+            <span asp-validation-for="StateName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StateCode" class="form-label"></label>
+            <input asp-for="StateCode" class="form-control" />
+            <span asp-validation-for="StateCode" class="text-danger"></span>
+        </div>
+
+        <!-- 👇 File Upload -->
+        <div class="mb-3">
+            <label asp-for="File" class="form-label">Upload Image</label>
+            <input asp-for="File" type="file" class="form-control" />
+            <span asp-validation-for="File" class="text-danger"></span>
+        </div>
+
+        <!-- 👇 Optional: Show existing image -->
+        @if (!string.IsNullOrEmpty(Model.FilePath))
+        {
+            <div class="mb-3">
+                <label class="form-label">Current Image</label><br />
+                <img src="https://localhost:7093/@Model.FilePath" alt="State Image" width="120" class="img-thumbnail" />
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary">@((Model.StateId == 0) ? "Add" : "Update")</button>
+        <a asp-action="Index" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+
+```
 ## Final Notes
 
 - Ensure `app.UseStaticFiles();` is enabled in your Web API project in Program.cs.
