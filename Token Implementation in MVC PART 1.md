@@ -201,7 +201,6 @@ namespace Address_Consume.Controllers
         public IActionResult Login() => View();
 
         [HttpPost]
-        [HttpPost]
         public async Task<IActionResult> Login(string Username, string Password, string Role)
         {
             var jsonData = await _authService.AuthenticateUserAsync(Username, Password, Role);
